@@ -1,6 +1,5 @@
 "use strict";
 
-
 var _ = lodashGas.load(); 
 
 
