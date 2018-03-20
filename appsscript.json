@@ -1,7 +1,17 @@
 {
   "timeZone": "Etc/GMT",
   "dependencies": {
+    "enabledAdvancedServices": [{
+      "userSymbol": "Drive",
+      "serviceId": "drive",
+      "version": "v2"
+    }],
     "libraries": [{
+      "userSymbol": "credentialsGas",
+      "libraryId": "1lMI49ZEAkjhcX2cN_yxnVr8F4J-Si6aXCKe0NntGA4qyJAMKLXyQjM_e",
+      "version": "1",
+      "developmentMode": true
+    }, {
       "userSymbol": "qsGas",
       "libraryId": "1K83z3EhQvei8ZQFpazKKjXiS0dW0BxcMGiwgh3vT5rBCez-WdYkaEfoi",
       "version": "1",
@@ -12,11 +22,6 @@
       "version": "1",
       "developmentMode": true
     }, {
-      "userSymbol": "credentialsGas",
-      "libraryId": "1lMI49ZEAkjhcX2cN_yxnVr8F4J-Si6aXCKe0NntGA4qyJAMKLXyQjM_e",
-      "version": "1",
-      "developmentMode": true
-    }, {
       "userSymbol": "lodashGas",
       "libraryId": "1UHPdknWjh63GaNo4A8skMpNEx4wsRDHrO3u6AgO6xHZrnUxKQnqJeAZk",
       "version": "1",
@@ -24,6 +29,9 @@
     }]
   },
   "exceptionLogging": "STACKDRIVER",
-  "oauthScopes": ["https://www.googleapis.com/auth/script.external_request"],
-  "urlFetchWhitelist": ["https://api.netlify.com/api/v1/","https://www.bitballoon.com/api/v1/"]
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/drive"
+  ],
+  "urlFetchWhitelist": ["https://api.netlify.com/api/v1/"]
 }

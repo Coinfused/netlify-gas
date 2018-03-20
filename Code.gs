@@ -1,305 +1,287 @@
-"use strict";
+'use strict';
 
 var _ = lodashGas.load(); 
 
-
-var NETLIFY_LIB = (function ( ) {
+var NETLIFY_LIB = ( function ( ) {
   
   function NETLIFY_LIB ( ) {
     
-    this.snippets = new OBJECT_LIB ( "snippets" );
-
-    this.scriptId_ = ScriptApp.getScriptId ( );
+    this.scriptId_ =  function () {
+      
+      return ScriptApp.getScriptId ( );
+      
+    };
+  
+    this.scriptUser_ = function () {
+      
+      return Session.getActiveUser ( ).getEmail ( );
+      
+    };
     
-    this.token = new credentialsGas.APIKEY_LIB ( "netlify_" + this.scriptId_, "max" );
-
-    this.baseUrl_ = "https://api.netlify.com/api/v1/";
-
-    this.userAgent_ = "Google Apps Script " + this.scriptId_ + " " + Session.getActiveUser ( ).getEmail ( );
-    
-    this.service_ = "netlify_" + this.scriptId_;
-        
-    this.credentials_ = new credentialsGas.APIKEY_LIB ( this.service_, "max" );
-    
+    this.NetlifyUser_ = function ( ) {
+      
+      return this.fetch_ ( "get", "accounts" ) [0] [ "slug" ];
+      
+    }; 
+          
+    this.service_ = "netlify_" + this.scriptId;
+  
     this.defineEndpoint_ = function ( site, endpoint ) {
       
       if ( _.isNil ( site ) ) return endpoint
+      
       else return "sites/" + site.replace("https://","").replace("http://","") + "/" + endpoint;
-    
+      
+    };
+        
+    this.defineContentType_ = function ( payload, contentType ) {
+      
+      if ( !_.isNil ( contentType ) ) return contentType
+      
+      else if ( typeof payload === "object" || _.isNil ( payload ) ) return "application/json"
+      
+      else return "application/zip";
+      
     };
     
-    this.defineContentType_ = function ( payload, contentType ) {
-
-      if ( !_.isNil ( contentType ) ) return contentType
-      else if ( typeof payload === "object" || _.isNil ( payload ) ) return "application/json"
-      else return "application/zip";
-    
-    }; 
+    this.defineResponse_ = function ( request, contentType ) {
+      
+      if ( contentType === "application/vnd.bitballoon.v1.raw" ) return request.getBlob ( )
+      
+      else return JSON.parse ( request.getContentText ( ) );
+      
+    };
     
     this.definePayload_ = function ( method, payload ) {
       
       if ( method.toLowerCase() === "get" ) return null
-      else if ( typeof payload === "object" ) JSON.stringify ( payload );
+      
+      else if ( typeof payload === "object" ) return JSON.stringify ( payload )
+      
       else return payload;
-    
+      
     };
-            
+    
     this.fetch_ = function ( method, endpoint, payload, contentType ) {
       
-      var contenttype =  this.defineContentType_ ( payload, contentType );
-      
-      var url = this.baseUrl_ + endpoint;
-      
-      var options = {
-        muteHttpExceptions : true,
-        followRedirects: true,
-        validateHttpsCertificates: true,
+      var options_ = {
+        
         method : method,
+        
+        payload : this.definePayload_ ( method, payload ),
+        
         headers : {
-          "User-Agent" : this.userAgent_,
-          "Authorization" :  "Bearer " + this.credentials_.get ( ),
-          "Accept" : this.defineContentType_ ( payload, contentType ),
-          "Content-Type" : this.defineContentType_ ( payload, contentType )
-        },
-        payload : this.definePayload_ ( method, payload )
-      }
-      var response = UrlFetchApp.fetch ( url, options );
-      var code = response.getResponseCode().toString().charAt(0)
-      if ( ( code === "2" ) && response.getContentText ( ) === "") return
-      else if ( code === "2" ) return JSON.parse ( response.getContentText ( ) )
-      else throw response.getResponseCode() + " " + response.getContentText();
-      
-    };
-    
-    
-  };
-  
-  NETLIFY_LIB.prototype.setToken = function ( name ) {
-                
-    var token = this.fetch_ ( "post", "oauth/applications/create_token",  { name : name } ) [ "token" ] [ "access_token" ];
-                    
-    return this.credentials_.put ( name, token )
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.removeToken = function ( name ) {
-     
-     this.credentials_.remove ( name );
-                    
-     var key_id = _.find( this.fetch_ ( "get", "oauth/applications" ), [ 'name', name ] );
-     
-     if ( key_id ) var client_id = key_id [ "client_id" ]
-     else throw name + " doesn't exist";
           
-     this.fetch_ ( "DELETE", "oauth/applications/" + client_id );
-     
-     return name + " removed";
-                        
-  }; 
+          "User-Agent" : "Google Apps Script ID: " + this.scriptId_() + " User: " + this.scriptUser_(),
+          
+          "Authorization" :  "Bearer " + this.key.get(),
+                    
+          "Content-Type" : this.defineContentType_ ( payload, contentType )
+        }
+        
+      };
+      
+      Logger.log(endpoint)
+      Logger.log(options_.headers)
+      var request = UrlFetchApp.fetch ( "https://api.netlify.com/api/v1/" + endpoint, options_ );
+      
+      return this.defineResponse_ ( request, contentType )
+            
+    };
+        
+    this.key = new credentialsGas.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
+    
+    // this.dns = new DNS_LIB ( this, this.NetlifyUser_ ( ) );
+    
+    this.snippets = new OBJECT_LIB ( this, "snippets" );
+    
+    this.hooks = new OBJECT_LIB ( this, "hooks" );
+    
+    this.deploys = new OBJECT_LIB ( this, "deploys" );
+    
+    this.files = new OBJECT_LIB ( this, "files" );
+    
+  }
   
+  NETLIFY_LIB.prototype.site_get = function ( site ) {
 
-  NETLIFY_LIB.prototype.user = function ( ) {
+    return {
+      snippets : this.snippets.get( site ),
+      hooks : this.hooks.get( site ),
+      deploys : this.deploys.get( site ),
+      files: this.files.get( site )
+    }
+    
+  };
+  
+  
+  NETLIFY_LIB.prototype.user_get = function ( ) {
 
     return this.fetch_ ( "get", "user" );
     
   };
   
-  
-  NETLIFY_LIB.prototype.accounts = function ( ) {
+  NETLIFY_LIB.prototype.accountsGet = function ( ) {
 
     return this.fetch_ ( "get", "accounts" );
     
   };
   
-  NETLIFY_LIB.prototype.getSites = function ( site ) {
-    
-    return this.fetch_ ( "get", this.defineEndpoint_ ( site, "sites" ) );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.createSite = function ( name, custom_domain, password, force_ssl, processing_settings, repo ) {
-        
-    return this.fetch_ ( "post", "sites", argumentsGas.zipArguments ( arguments.callee, arguments , argumentsGas.removeNil_ ) );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.removeSite = function ( name ) {
-        
-    return this.fetch_ ( "delete", "sites/" + name );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.setSsl = function ( name ) {
-        
-    return this.fetch_ ( "post", "sites/" + name + "/ssl" );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getForms = function ( site ) {
-    
-    return this.fetch_ ( "get", this.defineEndpoint_ ( site, "forms" ) );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getSubmissions = function ( site ) {
-    
-    return this.fetch_ ( "get", this.defineEndpoint_ ( site, "submissions" ) );
-    
-  };
-
-  
-  NETLIFY_LIB.prototype.removeSubmission = function ( id ) {
-    
-    return this.fetch_ ( "delete", "submissions/" + id );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getHooks = function ( site ) {
-    
-    return this.fetch_ ( "get",  _.isNil ( site ) ? "hooks" : "hooks?site_id=" + site );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getHooksTypes = function ( site ) {
-    
-    return this.fetch_ ( "get",  _.isNil ( site ) ? "hooks/types" : "hooks/types?site_id=" + site );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.setHook = function ( site, form_id, type, event, data ) {
-    
-    var payload = _.omit ( argumentsGas.zipArguments ( arguments.callee, arguments , argumentsGas.removeNil_ ), [ "site" ] );
-    
-    return this.fetch_ ( "post", payload );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.removeHook = function ( hook_id ) {
-    
-    return this.fetch_ ( "delete", "hooks/" + hook_id );
-    
-  };
-  
-
-  NETLIFY_LIB.prototype.getFile = function ( site, file_path ) {
-    
-    return this.fetch_ ( "get", _.isNil ( file_path )  ? "sites/" + site + "/files" : "sites/" + site + "/files/" + file_path );
-    
-  };
-
-  
-  NETLIFY_LIB.prototype.getFileRaw = function ( site, file_path ) {
-    
-    return this.fetch_ ( "get", "sites/" + site + "/files/" + file_path, null, "application/vnd.bitballoon.v1.raw" );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getSnippet = function ( site, id ) {
-    
-    return this.fetch_ ( "get", _.isNil ( id )  ? "sites/" + site + "/snippets" : "sites/" + site + "/snippets/" + id );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.setSnippet = function ( site, title, general, general_position, goal, goal_position ) {
-    
-    var payload = _.omit ( argumentsGas.zipArguments ( arguments.callee, arguments , argumentsGas.removeNil_ ), [ "site" ] );
-    
-    return this.fetch_ ( "post", "sites/" + site + "/snippets", payload );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.updateSnippet = function ( site, snippet_id, title, general, general_position, goal, goal_position ) {
-    
-    var payload = _.omit ( argumentsGas.zipArguments ( arguments.callee, arguments , argumentsGas.removeNil_ ), [ "site_id", "snippet_id" ] );
-    
-    return this.fetch_ ( "put", "sites/" + site + "/snippets/" + snippet_id, payload );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.removeSnippet = function ( snippet_id ) {
-    
-    return this.fetch_ ( "delete", "hooks/" + snippet_id );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getMetadata = function ( site ) {
-        
-    return this.fetch_ ( "get", "sites/" + site + "/metadata" );
-    
-  };
-  
-  NETLIFY_LIB.prototype.updateMetadata = function ( site ) {
-        
-    return this.fetch_ ( "put", "sites/" + site + "/metadata" );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.getDeploy = function ( site, id ) {
-            
-    return this.fetch_ ( "get", _.isNil ( id )  ? "sites/" + site + "/deploys" : "sites/" + site + "/deploys/" + id );
-    
-  };
-  
-  
-  NETLIFY_LIB.prototype.restoreDeploy = function ( site, id ) {
-            
-    return this.fetch_ ( "post", "sites/" + site + "/deploys/" + id + "/restore" );
-    
-  };
-      
   return NETLIFY_LIB;
-  
 
 }());
 
 
-  // add, update, remove, get
-
-
-
-
-var OBJECT_LIB = (function ( string ) {
+var SITE_LIB = (function ( dns ) {
   
-  function OBJECT_LIB ( string ) {
+  function RECORDS_LIB ( dns ) {
+  
+  };
+  
+  return RECORDS_LIB;
+  
+}());
+
+
+
+var DNS_LIB = (function ( ) {
+  
+  function DNS_LIB ( ) {
+      
+    this.endpoint_ = "dns_zones";
+    
+    this.self = this;
+        
+  };
+  
+  DNS_LIB.prototype.get = function ( ) {
+      
+    this.self.fetch_.call ( this.self, "get", this.endpoint_ + "?account_slug=" + this.user_ );
+    
+  };
+  
+  DNS_LIB.prototype.add = function ( name ) {
+  
+    this.cb ( "post", this.endpoint_, {"account_slug" : this.user_, name : name} );
+    
+  };
+  
+  DNS_LIB.prototype.remove = function ( name ) {
+          
+    this.cb ( "delete", this.endpoint_ +  "/" + _.find ( this.get(), [ "name", name ] ) [ "id" ] );
+    
+  }
+  
+  return DNS_LIB;
+  
+}());
+
+
+
+
+var RECORDS_LIB = (function ( dns ) {
+  
+  function RECORDS_LIB ( dns ) {
+  
+  };
+  
+  return RECORDS_LIB;
+  
+}());
+
+
+
+
+var OBJECT_LIB = (function ( self, string ) {
+  
+  function OBJECT_LIB ( self, string ) {
+    
+    this.self = self;
     
     this.string = string;
     
-    this.argsNames = function () {
+    this.validateMethod_ = function ( method ) {
+      switch ( _.toLower ( method ) ) {
+        case 'get':
+          var allowed = [ "snippets", "deploys", "files", "hooks", "forms" ];
+          break;
+        case 'add':
+          var allowed = [ "snippets", "deploys", "files", "hooks" ];
+          break;
+        case 'update':
+          var allowed = [ "snippets", "deploys", "files", "hooks" ];
+          break;
+        case 'destroy':
+          var allowed = [ "sites", "submissions", "hooks" ];
+          break;
+        case 'restore':
+          var allowed = [ "deploys" ];
+          break;
+        case 'types_get':
+          var allowed = [ "hooks" ];
+          break;
+        case 'blob_get':
+          var allowed = [ "files" ];
+          break;
+        default:
+          var allowed = [];
+      };
+      
+      if ( !_.includes(allowed, this.string ) ) throw this.string + " object doesn't support this method.";
     
-      if ( this.string === "snippets" ) return [ "title", "general", "general_position", "goal", "goal_position" ]
+    }
+    
+    this.defineObject = function () {
+      switch ( _.toLower ( this.string ) ) {
+        case 'snippets':
+          var supportedMethos = ["gets", "get", "add", "update", "destroy"]
+          var properties = [ "title", "general", "general_position", "goal", "goal_position" ];
+          break;
+        case 'hooks':
+          var supportedMethos = ["gets", "get", "add", "update", "destroy", "types_get"]
+          var properties = ["form_id", "type", "event", "data"];
+          break;
+        default:
+          return;
+      };    
     }
           
   };
   
-  
+    
   OBJECT_LIB.prototype.get = function ( site, id ) {
     
+    this.validateMethod_("get")
+                
     var endpoint = _.isNil ( id )  ? "sites/" + site + "/" + this.string : "sites/" + site + "/" + this.string + "/" + id;
     
-    return new NETLIFY_LIB ( ).fetch_ ( "get", endpoint );
+    return this.self.fetch_ ( "get", endpoint );
+    
+  };
+  
+  OBJECT_LIB.prototype.blob_get = function ( site, id ) {
+    
+    this.validateMethod_("blob_get")
+                        
+    var blob = this.self.fetch_ ( "get", "sites/" + site + "/" + this.string + "/" + id, null, "application/vnd.bitballoon.v1.raw" );
+    
+    // return blob.getAs("image/png")
+    
+    var file = {
+      title: 'foo.png',
+      mimeType: 'image/png'
+    };
+    
+    file = Drive.Files.insert(file, blob);
     
   };
   
   
-  OBJECT_LIB.prototype.remove = function ( site, id ) {
+  OBJECT_LIB.prototype.destroy = function ( site, id ) {
+    
+    this.validateMethod_("destroy");
         
-    return new NETLIFY_LIB ( ).fetch_ ( "delete", "sites/" + site + "/" + this.string + "/" + id );
+    return this.self.fetch_ ( "delete", "sites/" + site + "/" + this.string + "/" + id );
     
   };
   
@@ -308,17 +290,57 @@ var OBJECT_LIB = (function ( string ) {
         
     // var payload = _.zip ( this.argsNames, argsValues );
                 
-    return new NETLIFY_LIB ( ).fetch_ ( "post", "sites/" + site + "/" + this.string, payload );
+    return this.self.fetch_ ( "post", "sites/" + site + "/" + this.string, payload );
     
   };
   
   
   OBJECT_LIB.prototype.update = function ( site, id, payload ) {
                         
-    return new NETLIFY_LIB ( ).fetch_ ( "post", "sites/" + site + "/" + this.string + "/" + id , payload );
+    return this.self.fetch_ ( "put", "sites/" + site + "/" + this.string + "/" + id , payload );
+    
+  };
+  
+  // For deploys only.
+  OBJECT_LIB.prototype.restore = function ( site, id ) {
+    
+    if ( this.string !== "deploys" ) throw "Restore method works with deploys only";
+            
+    return this.self.fetch_ ( "post", "sites/" + site + "/deploys/" + id + "/restore" );
+    
+  };
+  
+  // For hooks only
+  OBJECT_LIB.prototype.types_get = function ( site ) {
+    
+    this.validateMethod_("types_get");
+        
+    return this.self.fetch_ ( "get",  _.isNil ( site ) ? "hooks/types" : "hooks/types?site_id=" + site );
     
   };
     
   return OBJECT_LIB;
   
 }());
+
+
+
+
+function netlify_test () {
+  
+  var netlify = new NETLIFY_LIB ();
+  
+  // Logger.log(netlify.key.put("YOUR_NETLIFY_APIKEY_HERE"))
+  // Logger.log(netlify.key.get())
+  
+  // Logger.log(netlify.user_get());
+  
+  // Logger.log(netlify.site_get());
+  
+  // Logger.log(netlify.hooks.get("bitman.ga"));
+  // Logger.log(netlify.hooks.types_get("bitman.ga"));
+  
+  Logger.log(netlify.files.get("sunsea.netlify.com", "sunsea.png"));
+  Logger.log(netlify.files.blob("sunsea.netlify.com", "sunsea.png"));
+  
+}
