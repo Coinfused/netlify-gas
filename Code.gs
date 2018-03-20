@@ -121,7 +121,7 @@ var NETLIFY_LIB = ( function ( ) {
     
   };
   
-  NETLIFY_LIB.prototype.accountsGet = function ( ) {
+  NETLIFY_LIB.prototype.accounts_get = function ( ) {
 
     return this.fetch_ ( "get", "accounts" );
     
@@ -334,6 +334,7 @@ function netlify_test () {
   // Logger.log(netlify.key.get())
   
   // Logger.log(netlify.user_get());
+  // Logger.log(netlify.accounts_get());
   
   // Logger.log(netlify.site_get());
   
