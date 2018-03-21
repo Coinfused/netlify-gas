@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = lodashGas.load(); 
+var _ = lodash.load(); 
 
 var NETLIFY_LIB = ( function ( ) {
   
@@ -266,7 +266,7 @@ var OBJECT_LIB = (function ( self, string ) {
     // return blob.getAs("image/png")
     
     var file = {
-      title: 'foo.png',
+      title: id,
       mimeType: 'image/png'
     };
     
