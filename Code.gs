@@ -87,7 +87,7 @@ var NETLIFY_LIB = ( function ( ) {
             
     };
         
-    this.key = new store.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
+    this.key = new storage.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
     
     // this.dns = new DNS_LIB ( this, this.NetlifyUser_ ( ) );
     

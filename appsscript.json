@@ -7,13 +7,13 @@
       "version": "v2"
     }],
     "libraries": [{
-      "userSymbol": "lodash",
-      "libraryId": "1UHPdknWjh63GaNo4A8skMpNEx4wsRDHrO3u6AgO6xHZrnUxKQnqJeAZk",
+      "userSymbol": "storage",
+      "libraryId": "1lMI49ZEAkjhcX2cN_yxnVr8F4J-Si6aXCKe0NntGA4qyJAMKLXyQjM_e",
       "version": "1",
       "developmentMode": true
     }, {
-      "userSymbol": "store",
-      "libraryId": "1lMI49ZEAkjhcX2cN_yxnVr8F4J-Si6aXCKe0NntGA4qyJAMKLXyQjM_e",
+      "userSymbol": "lodash",
+      "libraryId": "1UHPdknWjh63GaNo4A8skMpNEx4wsRDHrO3u6AgO6xHZrnUxKQnqJeAZk",
       "version": "1",
       "developmentMode": true
     }, {
