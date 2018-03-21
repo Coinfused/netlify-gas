@@ -13,15 +13,21 @@ var NETLIFY_LIB = ( function ( ) {
     };
   
     this.scriptUser_ = function () {
-      
+            
       return Session.getActiveUser ( ).getEmail ( );
       
     };
     
     this.NetlifyUser_ = function ( ) {
       
-      return this.fetch_ ( "get", "accounts" ) [0] [ "slug" ];
+      var s = new storage.STORE_LIB ( "user", "max" );
       
+      var slug = s.get ( "netlify_" + this.scriptId_() + "_slug" );
+      
+      if (_.isNil ( slug ) ) var slug = this.fetch_ ( "get", "accounts" ) [0] [ "slug" ];
+      
+      return s.put ( "netlify_" + this.scriptId_() + "_slug", slug )
+     
     }; 
             
     this.defineEndpoint_ = function ( site, endpoint ) {
@@ -89,7 +95,7 @@ var NETLIFY_LIB = ( function ( ) {
         
     this.key = new storage.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
     
-    // this.dns = new DNS_LIB ( this, this.NetlifyUser_ ( ) );
+    this.dns = new DNS_LIB ( this, this.NetlifyUser_ ( ) ); 
     
     this.snippets = new OBJECT_LIB ( this, "snippets" );
     
@@ -100,7 +106,7 @@ var NETLIFY_LIB = ( function ( ) {
     this.files = new OBJECT_LIB ( this, "files" );
     
   }
-  
+    
   NETLIFY_LIB.prototype.site_get = function ( site ) {
 
     return {
@@ -142,9 +148,11 @@ var SITE_LIB = (function ( dns ) {
 
 
 
-var DNS_LIB = (function ( ) {
+var DNS_LIB = (function ( self ) {
   
   function DNS_LIB ( ) {
+    
+    this.self = self;
       
     this.endpoint_ = "dns_zones";
     
@@ -153,6 +161,8 @@ var DNS_LIB = (function ( ) {
   };
   
   DNS_LIB.prototype.get = function ( ) {
+    
+    Logger.log(this.self)
       
     this.self.fetch_.call ( this.self, "get", this.endpoint_ + "?account_slug=" + this.user_ );
     
@@ -265,10 +275,7 @@ var OBJECT_LIB = (function ( self, string ) {
     
     // return blob.getAs("image/png")
     
-    var file = {
-      title: id,
-      mimeType: 'image/png'
-    };
+    var file = { title: id, mimeType: 'image/png' };
     
     file = Drive.Files.insert(file, blob);
     
@@ -340,6 +347,6 @@ function netlify_test () {
   // Logger.log(netlify.hooks.types_get("bitman.ga"));
   
   Logger.log(netlify.files.get("sunsea.netlify.com", "sunsea.png"));
-  Logger.log(netlify.files.blob_get("sunsea.netlify.com", "sunsea.png"));
+  // Logger.log(netlify.files.blob_get("sunsea.netlify.com", "sunsea.png"));
   
 }
