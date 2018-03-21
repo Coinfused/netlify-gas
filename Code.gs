@@ -23,9 +23,7 @@ var NETLIFY_LIB = ( function ( ) {
       return this.fetch_ ( "get", "accounts" ) [0] [ "slug" ];
       
     }; 
-          
-    this.service_ = "netlify_" + this.scriptId;
-  
+            
     this.defineEndpoint_ = function ( site, endpoint ) {
       
       if ( _.isNil ( site ) ) return endpoint
@@ -89,7 +87,7 @@ var NETLIFY_LIB = ( function ( ) {
             
     };
         
-    this.key = new credentialsGas.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
+    this.key = new store.APIKEY_LIB ( "netlify_" + this.scriptId_(), "max" );
     
     // this.dns = new DNS_LIB ( this, this.NetlifyUser_ ( ) );
     
@@ -342,6 +340,6 @@ function netlify_test () {
   // Logger.log(netlify.hooks.types_get("bitman.ga"));
   
   Logger.log(netlify.files.get("sunsea.netlify.com", "sunsea.png"));
-  Logger.log(netlify.files.blob("sunsea.netlify.com", "sunsea.png"));
+  Logger.log(netlify.files.blob_get("sunsea.netlify.com", "sunsea.png"));
   
 }

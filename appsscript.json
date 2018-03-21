@@ -7,31 +7,23 @@
       "version": "v2"
     }],
     "libraries": [{
-      "userSymbol": "credentialsGas",
+      "userSymbol": "lodash",
+      "libraryId": "1UHPdknWjh63GaNo4A8skMpNEx4wsRDHrO3u6AgO6xHZrnUxKQnqJeAZk",
+      "version": "1",
+      "developmentMode": true
+    }, {
+      "userSymbol": "store",
       "libraryId": "1lMI49ZEAkjhcX2cN_yxnVr8F4J-Si6aXCKe0NntGA4qyJAMKLXyQjM_e",
       "version": "1",
       "developmentMode": true
     }, {
-      "userSymbol": "qsGas",
+      "userSymbol": "qs",
       "libraryId": "1K83z3EhQvei8ZQFpazKKjXiS0dW0BxcMGiwgh3vT5rBCez-WdYkaEfoi",
-      "version": "1",
-      "developmentMode": true
-    }, {
-      "userSymbol": "argumentsGas",
-      "libraryId": "12d5QJceTBZ6icYDGm4m4ANwf53noIVzv_zPgiwhJ0o_fMRT3OX46A4pH",
-      "version": "1",
-      "developmentMode": true
-    }, {
-      "userSymbol": "lodashGas",
-      "libraryId": "1UHPdknWjh63GaNo4A8skMpNEx4wsRDHrO3u6AgO6xHZrnUxKQnqJeAZk",
       "version": "1",
       "developmentMode": true
     }]
   },
   "exceptionLogging": "STACKDRIVER",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/drive"
-  ],
+  "oauthScopes": ["https://www.googleapis.com/auth/script.external_request", "https://www.googleapis.com/auth/drive"],
   "urlFetchWhitelist": ["https://api.netlify.com/api/v1/"]
 }
